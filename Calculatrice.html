@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculatrice Scientifique Glassmorphism</title>
+<style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #1e2024, #2e3239);
+    --calc-bg: rgba(50, 50, 50, 0.25);
+    --btn-bg: rgba(255, 255, 255, 0.10);
+    --btn-hover-bg: rgba(255, 255, 255, 0.18);
+    --btn-act-bg: rgba(255, 255, 255, 0.23);
+    --btn-color: #fff;
+    --display-bg: rgba(255, 255, 255, 0.08);
+    --display-color: #fff;
+    --credit-color: rgba(255, 255, 255, 0.7);
+    --reflet-opacity: 0.20;
+  }
+  /* Palette personnalisée (Noir par défaut) */
+  body.palette-noir {
+    background: var(--bg-gradient);
+  }
+  body.palette-noir {
+    --calc-bg: rgba(50, 50, 50, 0.25);
+    --btn-bg: rgba(255, 255, 255, 0.10);
+    --btn-hover-bg: rgba(255, 255, 255, 0.18);
+    --btn-act-bg: rgba(255, 255, 255, 0.23);
+    --btn-color: #fff;
+    --display-bg: rgba(255, 255, 255, 0.08);
+    --display-color: #fff;
+    --credit-color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* Conteneur principal */
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg-gradient);
+    transition: background 0.4s cubic-bezier(.4,.58,.87,.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .main-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 600px;
+    width: 100%;
+    padding: 0 12px;
+    margin-top: 60px;
+  }
+
+  .calculator {
+    position: relative;
+    backdrop-filter: blur(15px);
+    background: var(--calc-bg);
+    border-radius: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    padding: 25px;
+    max-width: 450px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--display-color);
+    transition: background 0.4s, color 0.3s;
+  }
+
+  /* Bouton paramètres en dehors de la calculatrice, à droite */
+  .settings-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1.2em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09);
+    transition: background 0.25s;
+    flex-shrink: 0;
+    margin-top: 12px;
+  }
+  .settings-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Affichage + container */
+  .display-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .display {
+    background: var(--display-bg);
+    border-radius: 12px;
+    padding: 18px;
+    font-size: 1.8em;
+    overflow-x: auto;
+    white-space: nowrap;
+    text-align: right;
+    color: var(--display-color);
+    user-select: none;
+    flex-grow: 1;
+  }
+
+  /* Petite flèche discrète pour historique, sur le côté droit de l'écran */
+  .history-toggle {
+    margin-left: 8px;
+    border: none;
+    background: none;
+    color: var(--credit-color);
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    user-select: none;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+  .history-toggle.open {
+    transform: rotate(180deg);
+  }
+
+  /* Conteneur historique, affiché avec même taille que boutons */
+  .history {
+    display: none;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.9em;
+    max-height: 400px;
+    overflow-y: auto;
+    color: var(--display-color);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .history-entry {
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .history-entry:last-child {
+    border-bottom: none;
+  }
+
+  /* Grille boutons */
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    height: 400px; /* fixe même hauteur que l'historique */
+  }
+
+  button.calc-btn {
+    position: relative;
+    background: var(--btn-bg);
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 1.1em;
+    color: var(--btn-color);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s ease, background 0.3s;
+  }
+  button.calc-btn::before {
+    content: "";
+    position: absolute;
+    top: var(--btn-reflet-y, 50%);
+    left: var(--btn-reflet-x, 50%);
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at center, rgba(255,255,255,var(--reflet-opacity)), transparent 70%);
+    width: 180%;
+    height: 180%;
+    pointer-events: none;
+    transition: top 0.08s, left 0.08s, opacity 0.2s;
+    z-index: 0;
+  }
+  button.calc-btn:hover {
+    transform: scale(1.05);
+    background: var(--btn-hover-bg);
+  }
+  button.calc-btn:active {
+    transform: scale(0.95);
+    background: var(--btn-act-bg);
+  }
+
+  .credit {
+    margin-top: 24px;
+    font-size: 0.85em;
+    color: var(--credit-color);
+    text-align: center;
+    user-select: none;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  /* Palette popup */
+  .palette-popup {
+    position: absolute;
+    top: 0px;
+    right: -450px;
+    background: rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(16px);
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 12px 16px;
+    display: flex;
+    gap: 13px;
+    flex-wrap: wrap;
+    z-index: 200;
+    animation: popup-fade 0.35s;
+  }
+  @keyframes popup-fade {
+    from {
+      opacity: 0;
+      scale: 0.93;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+  .palette-choice {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #fff2;
+    box-shadow: 0 2px 9px rgba(0, 0, 0, 0.07);
+    transition: border 0.15s;
+  }
+  .palette-choice.selected {
+    border: 2.3px solid #fff;
+    scale: 1.08;
+  }
+  .palette-blanc-choice {
+    background: linear-gradient(135deg, #fff, #e8e8e8);
+  }
+  .palette-noir-choice {
+    background: linear-gradient(135deg, #222, #444);
+  }
+  .palette-orange-choice {
+    background: linear-gradient(135deg, #ffad4f, #ffc775);
+  }
+  .palette-bleu-choice {
+    background: linear-gradient(135deg, #56ccf2, #2b5876);
+  }
+  .palette-vert-choice {
+    background: linear-gradient(135deg, #acf6c1, #3cb371);
+  }
+  .palette-violet-choice {
+    background: linear-gradient(135deg, #a770ef, #e195ff);
+  }
+  .palette-rose-choice {
+    background: linear-gradient(135deg, #ff96ad, #ffc6dd);
+  }
+  .palette-rouge-choice {
+    background: linear-gradient(135deg, #ff4f4f, #ffd1d1);
+  }
+
+  /* Notification */
+  .notification {
+    position: fixed;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 63, 111, 0.86);
+    color: white;
+    border-radius: 9px;
+    padding: 11px 26px;
+    font-weight: 500;
+    box-shadow: 0 3px 15px rgba(255, 63, 111, 0.18);
+    font-size: 1em;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(8px) scale(1.04);
+    pointer-events: all;
+  }
+ /* Palette Blanc */
+body.palette-blanc {
+  --bg-gradient: linear-gradient(135deg, #f2f5f9, #ffffff);
+  --calc-bg: rgba(255,255,255,0.30);
+  --btn-bg: rgba(200,200,200,0.24);
+  --btn-hover-bg: rgba(255,255,255,0.40);
+  --btn-act-bg: rgba(210,210,210,0.50);
+  --btn-color: #222;
+  --display-bg: rgba(255,255,255,0.20);
+  --display-color: #222;
+  --credit-color: #2e3239;
+}
+
+/* Palette Orange */
+body.palette-orange {
+  --bg-gradient: linear-gradient(120deg, #ffad4f, #ffd6a0);
+  --calc-bg: rgba(255, 165, 80, 0.28);
+  --btn-bg: rgba(255,175,60,0.20);
+  --btn-hover-bg: rgba(255,175,60,0.29);
+  --btn-act-bg: rgba(255,175,60,0.36);
+  --btn-color: #fff;
+  --display-bg: rgba(255,188,120,0.18);
+  --display-color: #fff;
+  --credit-color: #f86a1e;
+}
+
+/* Palette Bleu */
+body.palette-bleu {
+  --bg-gradient: linear-gradient(120deg, #56ccf2, #2b5876);
+  --calc-bg: rgba(44,130,201,0.30);
+  --btn-bg: rgba(44,130,201,0.12);
+  --btn-hover-bg: rgba(44,130,201,0.22);
+  --btn-act-bg: rgba(44,130,201,0.30);
+  --btn-color: #fff;
+  --display-bg: rgba(146,198,233,0.18);
+  --display-color: #fff;
+  --credit-color: #245184;
+}
+
+/* Palette Vert */
+body.palette-vert {
+  --bg-gradient: linear-gradient(120deg, #acf6c1, #3cb371);
+  --calc-bg: rgba(60,179,113,0.28);
+  --btn-bg: rgba(60,179,113,0.15);
+  --btn-hover-bg: rgba(60,179,113,0.23);
+  --btn-act-bg: rgba(60,179,113,0.32);
+  --btn-color: #fff;
+  --display-bg: rgba(70,239,139,0.14);
+  --display-color: #fff;
+  --credit-color: #176339;
+}
+
+/* Palette Violet */
+body.palette-violet {
+  --bg-gradient: linear-gradient(120deg, #a770ef, #f6d365);
+  --calc-bg: rgba(167,112,239,0.28);
+  --btn-bg: rgba(167,112,239,0.15);
+  --btn-hover-bg: rgba(167,112,239,0.23);
+  --btn-act-bg: rgba(167,112,239,0.32);
+  --btn-color: #fff;
+  --display-bg: rgba(167,112,239,0.16);
+  --display-color: #fff;
+  --credit-color: #584c9e;
+}
+
+/* Palette Rose */
+body.palette-rose {
+  --bg-gradient: linear-gradient(120deg, #ff96ad, #f6d365);
+  --calc-bg: rgba(255,150,173,0.30);
+  --btn-bg: rgba(255,150,173,0.16);
+  --btn-hover-bg: rgba(255,150,173,0.23);
+  --btn-act-bg: rgba(255,150,173,0.32);
+  --btn-color: #fff;
+  --display-bg: rgba(255,150,173,0.14);
+  --display-color: #fff;
+  --credit-color: #ff4f7a;
+}
+
+/* Palette Rouge */
+body.palette-rouge {
+  --bg-gradient: linear-gradient(120deg, #ff4f4f, #fbc2c2);
+  --calc-bg: rgba(255,79,79,0.25);
+  --btn-bg: rgba(255,79,79,0.12);
+  --btn-hover-bg: rgba(255,79,79,0.24);
+  --btn-act-bg: rgba(255,79,79,0.36);
+  --btn-color: #fff;
+  --display-bg: rgba(255,79,79,0.16);
+  --display-color: #fff;
+  --credit-color: #b8161f;
+}
+  /* Responsive */
+  @media (max-width: 600px) {
+    .main-container {
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      max-width: 100vw;
+    }
+    .settings-btn {
+      margin-top: 0;
+      align-self: flex-end;
+      width: 32px;
+      height: 32px;
+      font-size: 1em;
+    }
+    .buttons {
+      grid-template-columns: repeat(4, 1fr);
+      height: 320px;
+    }
+    .history {
+      max-height: 320px;
+    }
+    .calculator {
+      max-width: 96vw;
+      padding: 20px 20px 12px 20px;
+    }
+    .credit {
+      font-size: 0.76em;
+      max-width: 96vw;
+      padding: 0 10px;
+    }
+  }
+</style>
+</head>
+<body class="palette-noir">
+
+  <div class="main-container">
+    <div class="calculator" id="calculator">
+
+      <div class="display-container">
+        <div class="display" id="display"></div>
+        <button class="history-toggle" id="historyToggle" title="Afficher / Masquer historique">▶</button>
+      </div>
+
+      <div class="history" id="history"></div>
+
+      <div class="buttons" id="buttons">
+        <button class="calc-btn" onclick="clearDisplay()">C</button>
+        <button class="calc-btn" onclick="deleteLast()">⌫</button>
+        <button class="calc-btn" onclick="appendValue('(')">(</button>
+        <button class="calc-btn" onclick="appendValue(')')">)</button>
+        <button class="calc-btn" onclick="appendValue('%')">%</button>
+        <button class="calc-btn" onclick="appendValue('sin(')">sin</button>
+        <button class="calc-btn" onclick="appendValue('cos(')">cos</button>
+        <button class="calc-btn" onclick="appendValue('tan(')">tan</button>
+        <button class="calc-btn" onclick="appendValue('π')">π</button>
+        <button class="calc-btn" onclick="appendValue('^')">xʸ</button>
+        <button class="calc-btn" onclick="appendValue('log(')">log</button>
+        <button class="calc-btn" onclick="appendValue('ln(')">ln</button>
+        <button class="calc-btn" onclick="appendValue('√(')">√</button>
+        <button class="calc-btn" onclick="appendValue('e')">e</button>
+        <button class="calc-btn" onclick="appendValue('/')">÷</button>
+        <button class="calc-btn" onclick="appendValue('7')">7</button>
+        <button class="calc-btn" onclick="appendValue('8')">8</button>
+        <button class="calc-btn" onclick="appendValue('9')">9</button>
+        <button class="calc-btn" onclick="appendValue('*')">×</button>
+        <button class="calc-btn" onclick="appendValue('^2')">x²</button>
+        <button class="calc-btn" onclick="appendValue('4')">4</button>
+        <button class="calc-btn" onclick="appendValue('5')">5</button>
+        <button class="calc-btn" onclick="appendValue('6')">6</button>
+        <button class="calc-btn" onclick="appendValue('-')">-</button>
+        <button class="calc-btn" onclick="appendValue('!')">n!</button>
+        <button class="calc-btn" onclick="appendValue('1')">1</button>
+        <button class="calc-btn" onclick="appendValue('2')">2</button>
+        <button class="calc-btn" onclick="appendValue('3')">3</button>
+        <button class="calc-btn" onclick="appendValue('+')">+</button>
+        <button class="calc-btn" onclick="calculateResult()" style="background: rgba(255, 123, 0, 0.38);">=</button>
+        <button class="calc-btn" onclick="appendValue('0')" style="grid-column: span 2;">0</button>
+        <button class="calc-btn" onclick="appendValue('.')">.</button>
+        <button class="calc-btn" onclick="appendValue(',')">,</button>
+      </div>
+
+      <div id="palette-popup" class="palette-popup" style="display:none;">
+        <div class="palette-choice palette-blanc-choice" data-palette="blanc" title="Blanc"></div>
+        <div class="palette-choice palette-noir-choice selected" data-palette="noir" title="Noir"></div>
+        <div class="palette-choice palette-orange-choice" data-palette="orange" title="Orange"></div>
+        <div class="palette-choice palette-bleu-choice" data-palette="bleu" title="Bleu"></div>
+        <div class="palette-choice palette-vert-choice" data-palette="vert" title="Vert"></div>
+        <div class="palette-choice palette-violet-choice" data-palette="violet" title="Violet"></div>
+        <div class="palette-choice palette-rose-choice" data-palette="rose" title="Rose"></div>
+        <div class="palette-choice palette-rouge-choice" data-palette="rouge" title="Rouge"></div>
+      </div>
+    </div>
+
+    <button class="settings-btn" id="settingsBtn" title="Paramètres (Palette de couleurs)">⚙</button>
+  </div>
+
+  <div class="credit">Fait avec ♥ par Noé - 2025</div>
+
+  <div class="notification" id="notification"></div>
+
+  <script>
+    const display = document.getElementById("display");
+    const buttonsEl = document.getElementById("buttons");
+    const historyToggleBtn = document.getElementById("historyToggle");
+    const historyEl = document.getElementById("history");
+    const palettePopup = document.getElementById("palette-popup");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const notification = document.getElementById("notification");
+
+    let calcHistory = [];
+    let palette = "noir";
+
+    function appendValue(value) {
+      display.textContent += value;
+    }
+    function clearDisplay() {
+      display.textContent = "";
+    }
+    function deleteLast() {
+      display.textContent = display.textContent.slice(0, -1);
+    }
+    function factorial(n) {
+      if (isNaN(n) || n < 0 || n > 100) {
+        showNotification("Valeur pour la factorielle non valide !");
+        return NaN;
+      }
+      return n <= 1 ? 1 : n * factorial(n - 1);
+    }
+    function showNotification(msg, type = "error") {
+      notification.textContent = msg;
+      notification.className = "notification show";
+      notification.style.background =
+        type == "error"
+          ? "rgba(255,63,111,0.86)"
+          : "linear-gradient(90deg,#b1ffb8,#46e370)";
+      notification.style.color = "#fff";
+      setTimeout(() => notification.classList.remove("show"), 2200);
+    }
+    function calculateResult() {
+      let expression = display.textContent;
+      if (!expression.trim()) return;
+      let mathExpr = expression
+        .replace(/π/g, `(${Math.PI})`)
+        .replace(/e\b/g, `(${Math.E})`)
+        .replace(/√\(/g, "Math.sqrt(")
+        .replace(/sin\(/g, "Math.sin(")
+        .replace(/cos\(/g, "Math.cos(")
+        .replace(/tan\(/g, "Math.tan(")
+        .replace(/log\(/g, "Math.log10(")
+        .replace(/ln\(/g, "Math.log(")
+        .replace(/\^/g, "**")
+        .replace(/([0-9]+)!/g, (_, n) => factorial(parseInt(n)))
+        .replace(/÷/g, "/")
+        .replace(/×/g, "*");
+      try {
+        let res = eval(mathExpr);
+        if (res === undefined || isNaN(res)) throw "Impossible d'évaluer";
+        display.textContent = res;
+        addHistory(expression, res);
+      } catch (e) {
+        showNotification("Erreur de calcul ! Vérifie ta saisie.");
+        display.textContent = "Erreur";
+      }
+    }
+    function addHistory(expr, res) {
+      calcHistory.unshift({ expr: expr, res: res });
+      if (calcHistory.length > 50) calcHistory.pop();
+    }
+    function renderHistory() {
+      if (calcHistory.length === 0) {
+        historyEl.innerHTML = "<i>Aucun historique disponible</i>";
+      } else {
+        historyEl.innerHTML = calcHistory
+          .map((h) => `<div class="history-entry"><b>${h.expr}</b> = ${h.res}</div>`)
+          .join("");
+      }
+    }
+    historyToggleBtn.addEventListener("click", () => {
+      const isOpen = historyToggleBtn.classList.toggle("open");
+      if (isOpen) {
+        renderHistory();
+        historyEl.style.display = "block";
+        buttonsEl.style.display = "none";
+      } else {
+        historyEl.style.display = "none";
+        buttonsEl.style.display = "grid";
+      }
+    });
+
+    // Reflets dynamiques sur boutons
+    document.querySelectorAll(".calc-btn").forEach((btn) => {
+      btn.addEventListener("mousemove", (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        btn.style.setProperty("--btn-reflet-x", `${x}px`);
+        btn.style.setProperty("--btn-reflet-y", `${y}px`);
+      });
+      btn.addEventListener("mouseleave", () => {
+        btn.style.setProperty("--btn-reflet-x", "50%");
+        btn.style.setProperty("--btn-reflet-y", "50%");
+      });
+    });
+
+    // Gestion palette popup
+    settingsBtn.addEventListener("click", () => {
+      palettePopup.style.display = palettePopup.style.display === "flex" ? "none" : "flex";
+    });
+    // Clic en dehors pour fermer popup palette
+    document.addEventListener("mousedown", function (e) {
+      if (
+        palettePopup.style.display === "flex" &&
+        !palettePopup.contains(e.target) &&
+        !settingsBtn.contains(e.target)
+      ) {
+        palettePopup.style.display = "none";
+      }
+    });
+
+    // Choix palette
+    document.querySelectorAll(".palette-choice").forEach((choice) => {
+      choice.addEventListener("click", function () {
+        palette = this.dataset.palette;
+        document.body.className = "palette-" + palette;
+        document.querySelectorAll(".palette-choice").forEach((c) => c.classList.remove("selected"));
+        this.classList.add("selected");
+        palettePopup.style.display = "none";
+        showNotification("Palette " + palette.charAt(0).toUpperCase() + palette.slice(1) + " appliquée", "success");
+      });
+    });
+
+    // Gestion saisie clavier complète
+    document.addEventListener("keydown", function (e) {
+      if (palettePopup.style.display === "flex") return;
+      const k = e.key.toLowerCase();
+      if (/\d/.test(k)) appendValue(k);
+      else if (k === "+" || k === "-" || k === "*" || k === "x" || k === "/" || k === "÷") appendValue(k === "x" ? "*" : k);
+      else if (k === "(" || k === ")") appendValue(k);
+      else if (k === "." || k === ",") appendValue(k);
+      else if (e.key === "Escape") clearDisplay();
+      else if (e.key === "Backspace") deleteLast();
+      else if (k === "%") appendValue("%");
+      else if (k === "p") appendValue("π");
+      else if (k === "e") appendValue("e");
+      else if (/^s(in)?$/.test(k)) appendValue("sin(");
+      else if (/^c(os)?$/.test(k)) appendValue("cos(");
+      else if (/^t(an)?$/.test(k)) appendValue("tan(");
+      else if (/^l(og)?$/.test(k)) appendValue("log(");
+      else if (/^n$/.test(k)) appendValue("ln(");
+      else if (k === "^") appendValue("^");
+      else if (k === "!") appendValue("!");
+      else if (k === "r") appendValue("√(");
+      else if (e.key === "Enter") calculateResult();
+    });
+    // Touche '=' sur pavé numérique
+    document.addEventListener("keypress", (e) => {
+      if (e.key === "=") calculateResult();
+    });
+  </script>
+</body>
+</html>
